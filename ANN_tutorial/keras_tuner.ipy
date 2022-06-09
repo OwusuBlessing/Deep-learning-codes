@@ -1,0 +1,53 @@
+# -*- coding: utf-8 -*-
+
+# Keras tuner:helps to determine the number of hidden layers and neurons in neural network
+#import libraries
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import pickle
+from tensorflow import keras
+from tensorflow.keras import layers
+import keras_tuner
+from kerastuner.tuners import RandomSearch
+
+df=pd.read_csv("C:/Users/user/Desktop/DL_tutorial/ANN_tutorial/Real_Combine.csv")
+df["PM 2.5"]=df["PM 2.5"].fillna(df["PM 2.5"].mean())
+# split data into dependent and independent features
+x=df.iloc[:,:-1]
+y=df.iloc[:,-1]
+## Hyperparameters
+#no of hidden layers
+#no of neurons in hidden layers
+#learning rate
+
+def build_model(hp):
+    model=keras.Sequential()
+    for i in range(hp.Int('num_layers',2,20)):
+        model.add(layers.Dense(hp.Int('units_' + str(i),min_value=32,
+                                            max_value=512,step=32),activation='relu'))
+    model.add(layers.Dense(1,activation='linear'))
+    model.compile(optimizer=keras.optimizers.Adam(hp.Choice("learning_rate",[1e-2,1e-3,1e-4])),
+                  loss="mean_absolute_error",
+                      metrics=['mean_absolute_error'])
+    return model
+
+tuner=RandomSearch(
+    build_model,
+    objective="val_mean_absolute_error",
+    max_trials=5, 
+    executions_per_trial=3,# total trials=15
+    directory="great_motor_keras", #weight are stored here as traininng is happening
+    project_name="Ai Quality index2")
+
+
+# split into test and train
+from sklearn.model_selection import train_test_split
+x_train,x_test,y_train,y_test=train_test_split(x,y,test_size=0.2,random_state=1)
+
+# tune parameter
+tuner.search(x_train,y_train,
+             epochs=5, #make sure it is high
+            validation_data=(x_test,y_test))
+print(tuner.results_summary())

@@ -1,0 +1,94 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Apr 28 02:24:53 2022
+
+@author: user
+"""
+
+
+#import libraries
+from sklearn.model_selection import train_test_split
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import pickle
+
+df=pd.read_csv("C:/Users/user/Desktop/DL_tutorial/ANN_tutorial/churn_modellin.csv")
+
+# splitiing data
+x=df.iloc[:,3:13]
+y=df.iloc[:,13]
+
+# converting categprical features to dummie geography and gender
+geo=pd.get_dummies(x["Geography"],drop_first=True)
+gender=pd.get_dummies(x["Gender"],drop_first=True)
+
+ 
+# concatenate data_frame
+X=pd.concat([x,geo,gender],axis=1)
+# drop unnecssary columns
+X=X.drop(columns=["Geography","Gender"],axis=1)
+
+# split into test and train
+x_train, x_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=1)
+
+# feature scaling
+## Note:feature scaling is important in deep learning cos of 
+##product of weight and input since large magnitude of input can take a longer
+from sklearn.preprocessing import StandardScaler
+sc=StandardScaler()
+x_train=sc.fit_transform(x_train)
+x_test=sc.transform(x_test)
+
+# import libarris for ann
+from keras.models import Sequential
+from keras.layers import Dense
+from keras.layers import LeakyReLU,PReLU,ELU
+from keras.layers import Dropout
+
+#initialize ANN
+classifier=Sequential()
+# create input layer and first hidden layer
+classifier.add(Dense(10,kernel_initializer="he_uniform",activation="relu",input_dim=11))
+classifier.add(Dropout(0.3))
+
+# adding second hidden layer
+classifier.add(Dense(20,kernel_initializer="he_uniform",activation="relu"))
+classifier.add(Dropout(0.4))
+#dding third hidden layer
+classifier.add(Dense(15,kernel_initializer="he_uniform",activation="relu"))
+classifier.add(Dropout(0.2))
+# adding ouput layer
+classifier.add(Dense(1,kernel_initializer="glorot_uniform",activation="sigmoid"))
+# compiling the ANN
+classifier.compile(optimizer="Adam",loss="binary_crossentropy",metrics=["accuracy"])
+# fiiting the ANN on training set
+model_history=classifier.fit(x_train,y_train,validation_split=0.33,batch_size=10,epochs=100)
+
+model_history=classifier.fit(x_train,y_train,validation_split=0.33,batch_size=10,epochs=100)
+# list all data in history
+print(model_history.history.keys())
+#summarize hisotry for accuracy
+plt.plot(model_history.history["accuracy"])
+plt.plot(model_history.history["val_accuracy"])
+plt.title("model accuracy")
+plt.xlabel("epoch")
+plt.ylabel("accuracy")
+plt.legend(["train,test"],loc="upper left")
+plt.show()
+
+# making predictions
+y_pred=classifier.predict(x_test)
+y_pred=(y_pred > 0.5)
+from sklearn.metrics import confusion_matrix
+cm=confusion_matrix(y_test,y_pred)
+from sklearn.metrics import accuracy_score
+score=accuracy_score(y_pred,y_test)
+
+
+
+
+
+

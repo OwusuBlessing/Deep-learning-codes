@@ -1,0 +1,29 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Wed May 18 00:17:23 2022
+
+@author: user
+"""
+# import necessary libraries
+
+import cv2
+import numpy as np
+face_classifier = cv2.CascadeClassifier(cv2.data.haarcascades+"C:/Users/user/Desktop/DL_tutorial/Computer_vision/Face_and eye recognition/haarcascade_frontalface_default.xml")
+
+# load the image
+image = cv2.imread(r"Face_and eye recognition/fatih-yildirim-qp30IRLPgsg-unsplash.jpg")
+gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+# the classifier stores the top left coordinate face_classifier and returns and empty tuple
+faces=face_classifier.detectMultiScale(gray,1.3,5)
+
+# when no face is detected,face classifier returns an empty list
+if faces is ():
+    print("No faces found")
+# iterate through the faces array and draw a rectangle over each face
+
+for (x,y,w,h) in faces:
+    cv2.rectangle(image, (x,y), (x+w,y+h),(127,0,255))
+    cv2.imshow("Face detection",image)
+    cv2.waitKey(0)
+cv2.destroyAllWindows()
